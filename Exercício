@@ -1,0 +1,78 @@
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+void main() {
+  runApp(WeatherApp());
+}
+
+class WeatherApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: WeatherScreen(),
+    );
+  }
+}
+
+class WeatherScreen extends StatefulWidget {
+  @override
+  _WeatherScreenState createState() => _WeatherScreenState();
+}
+
+class _WeatherScreenState extends State<WeatherScreen> {
+  List<dynamic> weatherData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchWeatherData();
+  }
+
+  Future<void> fetchWeatherData() async {
+    final url = 'https://demo3520525.mockable.io/previsao';
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      setState(() {
+        weatherData = json.decode(response.body);
+      });
+    } else {
+      // Caso haja um erro na requisição
+      print('Erro ao carregar dados de previsão do tempo');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Previsão do Tempo'),
+      ),
+      body: weatherData.isEmpty
+          ? Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: weatherData.length,
+              itemBuilder: (context, index) {
+                final item = weatherData[index];
+                return Card(
+                  child: ListTile(
+                    title: Text('Data: ${item['data']}'),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                            'Temperatura: ${item['temperatura']}°${item['unidade']}'),
+                        Text('Umidade: ${item['umidade']}%'),
+                        Text('Luminosidade: ${item['luminosidade']}'),
+                        Text('Vento: ${item['vento']} km/h'),
+                        Text('Chuva: ${item['chuva']} mm'),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+    );
+  }
+}
